@@ -8,6 +8,49 @@ This program reads a FASTA file from stdin and outputs a FASTA file to stdout
 with all the sequences reverse complemented.
 """
 
+# The most common Python implementation, CPython, is written in C. Therefore
+# many builtin methods and functions are implemented in C. The trick for
+# writing fast Python is therefore to leverage as much of this C power as
+# possible.
+# For this particular problem we need to do the following things
+# 1. Parse FASTA. The structure is fairly simple. A '>' starts a sequence name,
+#    the first '\n' terminates the sequence name. And everything between that
+#    and the next '>' is a sequence.
+#    We can diminish Python overhead by reading entire 64KB blocks from the
+#    input and use the 'find' method on bytes objects (implemented in C!) to
+#    find where the sequences start and begin.
+# 2. Complement the sequence. in C this would best be accomplished by a
+#    lookup table. A 256-characters long array. So that every character's
+#    ordinal is equal to the index of the array. So 'A' is index 65. At index
+#    65 of the lookup table we can put the reverse complement of 'A': 'T'.
+#    Python has a convenience function that can make such a complement table
+#    bytes.maketrans(). It can also use the table using the 'translate' method
+#    on the bytes object. This is all implemented in C so this way we can
+#    easily leverage some C performance.
+# 3. Reverse the sequence. Using the slicing operator we can do
+#    'sequence[::-1]'. This creates a new object, where the original sequence
+#    is copied into but stepping in reverse. Because this creates a new object
+#    rather than reversing in place, Python does not have to worry about
+#    overwriting memory it still needs to read from. This is therefore faster
+#    than using the 'reverse()' method on bytearray objects.
+# 4. Removing the old formatting in the form of newlines which are still
+#    present in the sequence. We can already tackle this at step 2, by using
+#    the translate method on the bytes object to also remove the '\n'
+#    characters. I didn't know this was possible until I saw it in the other
+#    submitted programs. The python standard library has many gems!
+# 5. Reformatting the sequence for printing. Unfortunately I have not found
+#    a fast method for this, so this program will use the slicing operator
+#    to create a new object for *every single line* and then join them using
+#    the 'join()' method which allows putting newlines in between.
+#
+# The above implementation is quite okay but has one disadvantage. Sequences
+# are treated as large blocks. But these sequences can be several megabytes.
+# This has bad cache locality. Cache is the memory close to the CPU and is
+# limited in size (usually in the high KB low MB range). This means
+# that on an object of several tens of megabytes does not fit in cache. When
+# the program starts on it, the start of the object is loaded in the cache.
+
+
 import sys
 from typing import BinaryIO, Iterator, List, Tuple
 
