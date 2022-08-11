@@ -3,16 +3,36 @@ from typing import BinaryIO, Iterator, Tuple
 
 
 def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, bytes]]:
-    name = next(inp)
-    lines = []
-    for line in inp:
-        if line.startswith(b">"):
-            yield name, b"".join(lines)
-            name = line
-            lines = []
-            continue
-        lines.append(line)
-    yield name, b"".join(lines)
+    block_size = 64 * 1024
+    name_index = 0
+    block = inp.read(block_size)
+    while True:
+        name_end = block.find(b"\n", name_index)
+        if name_end == -1:
+            name_part = block[name_index:]
+            block = inp.read(block_size)
+            if block == b"":
+                return
+            name = name_part + block[:name_end]
+        else:
+            name = block[name_index: name_end]
+        seq_parts = []
+        while True:
+            name_index = block.find(b">", name_end)
+            if name_index == -1:
+                seq_parts.append(block[name_end:])
+                block = inp.read(block_size)
+                if block == b"":
+                    yield name, b"".join(seq_parts)
+                    return
+                name_end = 0
+                continue
+            if seq_parts:
+                seq_parts.append(block[:name_index])
+                yield name, b"".join(seq_parts)
+                break
+            yield name, block[name_end: name_index]
+            break
 
 
 def reverse_complement(inp: BinaryIO, outp: BinaryIO):
@@ -29,6 +49,7 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
         fasta_lines = [reversed[i:i+line_length]
                        for i in range(0, len(reversed), line_length)]
         outp.write(name)
+        outp.write(b"\n")
         outp.write(b"\n".join(fasta_lines))
         outp.write(b"\n")
     outp.flush()
