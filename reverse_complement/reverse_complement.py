@@ -1,8 +1,8 @@
 import sys
-from typing import BinaryIO, Iterator, Tuple
+from typing import BinaryIO, Iterator, List, Tuple
 
 
-def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, bytes]]:
+def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, List[bytes]]]:
     block_size = 64 * 1024
     name_index = 0
     block = inp.read(block_size)
@@ -40,10 +40,10 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
         complmn + complmn,
     )
     line_length = 60
-    last_line_length = 0
     for name, sequence_parts in parse_fasta(inp):
         outp.write(name)
         outp.write(b"\n")
+        last_line_length = 0
         for part in reversed(sequence_parts):
             translated = part.translate(translate_table, b'\n')
             rev = translated[::-1]
@@ -54,12 +54,9 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
             outp.write(rev[:offset])
             outp.write(b"\n")
             outp.write(b"\n".join(fasta_lines))
+        outp.write(b"\n")
     outp.flush()
 
 
-def main():
-    reverse_complement(sys.stdin.buffer, sys.stdout.buffer)
-
-
 if __name__ == "__main__":
-    main()
+    reverse_complement(sys.stdin.buffer, sys.stdout.buffer)
