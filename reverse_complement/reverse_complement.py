@@ -23,15 +23,12 @@ def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, bytes]]:
                 seq_parts.append(block[name_end:])
                 block = inp.read(block_size)
                 if block == b"":
-                    yield name, b"".join(seq_parts)
+                    yield name, seq_parts
                     return
                 name_end = 0
                 continue
-            if seq_parts:
-                seq_parts.append(block[:name_index])
-                yield name, b"".join(seq_parts)
-                break
-            yield name, block[name_end: name_index]
+            seq_parts.append(block[name_end:name_index])
+            yield name, seq_parts
             break
 
 
@@ -43,15 +40,20 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
         complmn + complmn,
     )
     line_length = 60
-    for name, sequence in parse_fasta(inp):
-        translated = sequence.translate(translate_table, b'\n')
-        reversed = translated[::-1]
-        fasta_lines = [reversed[i:i+line_length]
-                       for i in range(0, len(reversed), line_length)]
+    last_line_length = 0
+    for name, sequence_parts in parse_fasta(inp):
         outp.write(name)
         outp.write(b"\n")
-        outp.write(b"\n".join(fasta_lines))
-        outp.write(b"\n")
+        for part in reversed(sequence_parts):
+            translated = part.translate(translate_table, b'\n')
+            rev = translated[::-1]
+            offset = line_length - last_line_length
+            fasta_lines = [rev[offset + i:offset + i + line_length]
+                           for i in range(0, len(rev), line_length)]
+            last_line_length = len(fasta_lines[-1])
+            outp.write(rev[:offset])
+            outp.write(b"\n")
+            outp.write(b"\n".join(fasta_lines))
     outp.flush()
 
 
