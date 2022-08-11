@@ -48,8 +48,8 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
             translated = part.translate(translate_table, b'\n')
             rev = translated[::-1]
             offset = line_length - last_line_length
-            fasta_lines = [rev[offset + i:offset + i + line_length]
-                           for i in range(0, len(rev), line_length)]
+            fasta_lines = [rev[i:i + line_length]
+                           for i in range(offset, len(rev), line_length)]
             last_line_length = len(fasta_lines[-1])
             outp.write(rev[:offset])
             outp.write(b"\n")
