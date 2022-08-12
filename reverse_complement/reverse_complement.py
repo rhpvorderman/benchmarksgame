@@ -73,7 +73,11 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
 
 
 if __name__ == "__main__":
-    reverse_complement(sys.stdin.buffer, sys.stdout.buffer)
+    if len(sys.argv) > 1:
+        out = open(sys.argv[1], "wb")
+    else:
+        out = sys.stdout.buffer
+    reverse_complement(sys.stdin.buffer, out)
 
 
 # The most common Python implementation, CPython, is written in C. Therefore
