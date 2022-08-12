@@ -14,10 +14,6 @@ from typing import BinaryIO, Iterator, List, Tuple
 
 
 def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, List[bytes]]]:
-    """
-    Create a generator from inp (a binary IO object) that yields
-    names (bytes) and sequence parts (list of bytes objects)
-    """
     block_size = 64 * 1024
     name_index = 0
     block = inp.read(block_size)
@@ -61,8 +57,6 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
         last_line_length = 0
         for part in reversed(sequence_parts):
             translated = part.translate(translate_table, b'\n')
-            # [start:stop:step] -> using -1 as step creates a new reversed
-            # bytes object. This is faster than reversing in place with a bytearray.
             rev = translated[::-1]
             offset = line_length - last_line_length
             fasta_lines = [rev[i:i + line_length]
