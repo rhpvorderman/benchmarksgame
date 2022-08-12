@@ -66,6 +66,9 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
             outp.write(b"\n")
             outp.write(b"\n".join(fasta_lines))
         outp.write(b"\n")  # Terminate entire sequence with final newline.
+        # This del statement just before a new sequence is read ensures there
+        # is only have one sequence in memory at the time.
+        del sequence_parts
     outp.flush()
 
 
