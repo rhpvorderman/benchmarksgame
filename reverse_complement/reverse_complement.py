@@ -113,7 +113,10 @@ if __name__ == "__main__":
 #    much faster if there were a method to copy the sequence to a new buffer
 #    with newlines in between, but there is no standard library that does this
 #    as far as I know. This is the slowest part of the program taking roughly
-#    40% of the execution time creating all this individual objects.
+#    40% of the execution time creating all this individual objects. When this
+#    becomes a problem in the real-world you can write a custom C extension
+#    (either by hand or using Cython) that tackles this problem. But in this
+#    benchmark game it would of course be cheating to use C.
 #
 # The above described implementation has one disadvantage. Sequences
 # are treated as large strings. But these sequences can be several megabytes.
