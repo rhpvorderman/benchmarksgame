@@ -59,11 +59,11 @@ def reverse_complement(inp: BinaryIO, outp: BinaryIO):
             translated = part.translate(translate_table, b'\n')
             rev = translated[::-1]
             offset = line_length - last_line_length
+            outp.write(rev[:offset])  # Fill out remaining bytes on the line.
+            outp.write(b"\n")
             fasta_lines = [rev[i:i + line_length]
                            for i in range(offset, len(rev), line_length)]
             last_line_length = len(fasta_lines[-1])
-            outp.write(rev[:offset])  # Fill out remaining bytes on the line.
-            outp.write(b"\n")
             outp.write(b"\n".join(fasta_lines))
         outp.write(b"\n")  # Terminate entire sequence with final newline.
         # This del statement just before a new sequence is read ensures there
