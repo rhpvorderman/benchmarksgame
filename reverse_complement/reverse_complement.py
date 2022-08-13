@@ -12,7 +12,10 @@ with all the sequences reverse complemented.
 import sys
 from typing import BinaryIO, Iterator, List, Tuple
 
-BLOCK_SIZE = 64 * 1024
+# BLOCK_SIZE: larger means less blocks and therefore less Python overhead.
+# smaller means less cache misses. There is a tradeoff.
+# The optimal setting on my test machine is:
+BLOCK_SIZE = 32 * 1024
 
 
 def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, List[bytes]]]:
