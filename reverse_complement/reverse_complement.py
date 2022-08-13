@@ -12,9 +12,11 @@ with all the sequences reverse complemented.
 import sys
 from typing import BinaryIO, Iterator, List, Tuple
 
+BLOCK_SIZE = 64 * 1024
+
 
 def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, List[bytes]]]:
-    block_size = 64 * 1024
+    block_size = BLOCK_SIZE
     name_index = 0
     block = inp.read(block_size)
     while True:
