@@ -121,6 +121,9 @@ if __name__ == "__main__":
 #    becomes a problem in the real-world you can write a custom C extension
 #    (either by hand or using Cython) that tackles this problem. But in this
 #    benchmark game it would of course be cheating to use C.
+#    I have tried other methods, including working with a mutable bytesarray
+#    and working with ctypes.memmove, but simple b"\n".join(fasta_lines) is
+#    both the most simple and efficient.
 #
 # The above described implementation has one disadvantage. Sequences
 # are treated as large strings. But these sequences can be several megabytes.
