@@ -24,28 +24,28 @@ def parse_fasta(inp: BinaryIO) -> Iterator[Tuple[bytes, List[bytes]]]:
     block = inp.read(block_size)
     while True:
         name_end = block.find(b"\n", name_index)
-        if name_end == -1:
+        if name_end == -1:  # name runs past the end of block
             name_part = block[name_index:]
             block = inp.read(block_size)
             if block == b"":
-                return
+                raise EOFError("truncated FASTA file")
+            name_end = block.find(b"\n", name_index)
             name = name_part + block[:name_end]
         else:
             name = block[name_index: name_end]
         seq_parts = []
-        while True:
+        while True:  # gather all blocks until the next sequence
             name_index = block.find(b">", name_end)
-            if name_index == -1:
-                seq_parts.append(block[name_end:])
-                block = inp.read(block_size)
-                if block == b"":
-                    yield name, seq_parts
-                    return
-                name_end = 0
-                continue
-            seq_parts.append(block[name_end:name_index])
-            yield name, seq_parts
-            break
+            if name_index != -1:
+                seq_parts.append(block[name_end:name_index])
+                yield name, seq_parts
+                break
+            seq_parts.append(block[name_end:])
+            block = inp.read(block_size)
+            if block == b"":
+                yield name, seq_parts
+                return
+            name_end = 0
 
 
 def reverse_complement(inp: BinaryIO, outp: BinaryIO):
